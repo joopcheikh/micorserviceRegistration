@@ -17,18 +17,6 @@ import com.registration.registration.service.ErrorResponse;
 @RestController
 public class AuthenticationController {
 
-    /*
-    * @RestController: Cette annotation indique que cette classe est un contrôleur
-    *  où chaque méthode retourne une réponse JSON (ou similaire) directement dans
-    * le corps de la réponse HTTP. C'est une combinaison de @Controller et @ResponseBody.
-    *
-    * ResponseEntity est utilisé pour contrôler le statut de la réponse HTTP ainsi
-    * que le corps de la réponse.
-    *
-    * @RequestBody User userRegister : Le corps de la requête (qui contient probablement des données JSON)
-    * est converti en un objet User par Spring.
-     */
-
     @Autowired
     private AuthenticationService authenticationService;
 
