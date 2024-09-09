@@ -31,6 +31,10 @@ public class User implements UserDetails {
     private String firstname;
 
     private String lastname;
+
+    @Column(nullable=false)
+    @Enumerated(value = EnumType.STRING)
+    private TypeCandidat typeCandidat;
     
     @Column(unique = true)
     private String email;
