@@ -14,7 +14,6 @@ public class UserReset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String email;
-    private String name;
     private String password;
 
     // Getters and Setters
@@ -34,13 +33,7 @@ public class UserReset {
         this.email = email; 
     }
 
-    public String getName() { 
-        return name; 
-    }
 
-    public void setName(String name) { 
-        this.name = name; 
-    }
 
     public String getPassword() { 
         return password; 
