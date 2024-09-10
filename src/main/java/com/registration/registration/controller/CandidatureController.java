@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.registration.registration.service.AuthenticationService;
 
-@RestController
+/*@RestController
 public class CandidatureController {
 
     @Autowired
@@ -74,4 +74,4 @@ public class CandidatureController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-}
+}*/

@@ -91,7 +91,7 @@ public class AuthenticationService {
     }
 
     // Methode pour les candidatures
-    public String candidature(String username, String firstname, String telephone, String sexe, String address, Date birthdate, String birthplace, String cnicardnumber, String filePath, String concours) throws IOException {
+    /*public String candidature(String username, String firstname, String telephone, String sexe, String address, Date birthdate, String birthplace, String cnicardnumber, String filePath, String concours) throws IOException {
         // Vérifiez que le fichier est un PDF
         Path file = Paths.get(filePath);
         if (!Files.exists(file)) {
@@ -127,5 +127,5 @@ public class AuthenticationService {
         }
 
         return "Candidature reçue avec succès.";
-    }
+    }*/
 }
