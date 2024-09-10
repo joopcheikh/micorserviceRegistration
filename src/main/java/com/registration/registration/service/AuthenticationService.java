@@ -1,11 +1,5 @@
 package com.registration.registration.service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,13 +7,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.registration.registration.emailrest.EmailService;
-import com.registration.registration.model.Candidature;
 import com.registration.registration.model.Role;
 import com.registration.registration.model.User;
-import com.registration.registration.repository.CandidatureRepository;
 import com.registration.registration.repository.UserRepository;
-
-import io.jsonwebtoken.io.IOException;
 
 @Service
 public class AuthenticationService {
@@ -28,7 +18,6 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
-    private final CandidatureRepository candidatureRepository;
 
     @Autowired
     private EmailService emailService;
@@ -38,14 +27,12 @@ public class AuthenticationService {
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
-            CandidatureRepository candidatureRepository,
             AuthenticationManager authenticationManager) {
 
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
-        this.candidatureRepository = candidatureRepository;
 
     }
 
