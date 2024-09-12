@@ -3,3 +3,10 @@ docker exec -it postgres_db psql -U postgres -d registration
 ALTER TABLE users
 DROP CONSTRAINT users_role_check,
 ADD CONSTRAINT users_role_check CHECK (role IN ('ADMIN', 'USER', 'RECRUITER'));
+
+
+Tache criteres backend pour les concours
+
+UPDATE users
+SET role = 'ADMIN'
+WHERE id = 1;

@@ -52,12 +52,12 @@ public class AuthenticationService {
         user.getFirstname()
         );
 
-        emailService.sendEmail(user.getEmail(), "Alerte creation de compte gatsmapping", emailBody);
-     
-
+      
         // Return JSON response
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
+        emailService.sendEmail(user.getEmail(), "Alerte creation de compte gatsmapping", emailBody);
+     
 
         return new AuthenticationResponse(token, savedUser.getRole().name());
     }

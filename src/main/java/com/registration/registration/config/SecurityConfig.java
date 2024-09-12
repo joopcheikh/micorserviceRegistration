@@ -3,6 +3,7 @@ package com.registration.registration.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,12 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.registration.registration.auditing.ApplicationAuditAware;
 import com.registration.registration.filter.JwtAuthenticationFilter;
 import com.registration.registration.service.UserDetailsServiceImp;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
-
 
 @Configuration
 @EnableWebSecurity
@@ -35,16 +35,21 @@ public class SecurityConfig {
     @Autowired
     public SecurityConfig(
             UserDetailsServiceImp userDetailsServiceImp,
-            JwtAuthenticationFilter jwtAuthenticationFilter
-    ) {
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsServiceImp = userDetailsServiceImp;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+    public AuditorAware<Integer> auditorAware() {
+        return new ApplicationAuditAware();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable) // Le CSRF est désactivé ici pour permettre une configuration plus simple dans cet exemple
+                .csrf(AbstractHttpConfigurer::disable) // Le CSRF est désactivé ici pour permettre une configuration
+                                                       // plus simple dans cet exemple
                 .authorizeHttpRequests(
                         req -> req
                                 .requestMatchers(
@@ -60,16 +65,15 @@ public class SecurityConfig {
                                         "/webjars/**",
                                         "/email/send",
                                         "/email/validate",
-                                        "/email/change-password"
-                                        )
+                                        "/email/change-password")
                                 .permitAll()
                                 .anyRequest()
-                                .authenticated()
-                )
+                                .authenticated())
                 .userDetailsService(userDetailsServiceImp)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 /*
-                 * Cela permet à votre filtre JWT de vérifier la validité du jeton JWT dans chaque requête avant que Spring Security
+                 * Cela permet à votre filtre JWT de vérifier la validité du jeton JWT dans
+                 * chaque requête avant que Spring Security
                  * ne gère l'authentification de l'utilisateur.
                  */
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -84,17 +88,19 @@ public class SecurityConfig {
      * On va crypter les informations d'authentification avant de les sauvegarder
      * en base de données
      *
-     *  L'encodage (ou hachage) du mot de passe le rend irréversible, ce qui
-     *  signifie qu'il est difficile pour un attaquant d'obtenir le mot de
-     *  passe réel même s'il accède à la base de données.
+     * L'encodage (ou hachage) du mot de passe le rend irréversible, ce qui
+     * signifie qu'il est difficile pour un attaquant d'obtenir le mot de
+     * passe réel même s'il accède à la base de données.
      */
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /* AuthenticationManager est responsable de la validation des informations
-     * d'identification fournies par un utilisateur lors de la tentative de connexion.
+    /*
+     * AuthenticationManager est responsable de la validation des informations
+     * d'identification fournies par un utilisateur lors de la tentative de
+     * connexion.
      *
      * et le fait de le définir en tant que bean permet à Spring d'injecter
      * cette dépendance dans d'autres composants qui nécessitent des fonctionnalités
@@ -119,6 +125,3 @@ public class SecurityConfig {
         };
     }
 }
-
-
-
