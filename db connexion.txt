@@ -10,3 +10,82 @@ Tache criteres backend pour les concours
 UPDATE users
 SET role = 'ADMIN'
 WHERE id = 1;
+
+
+AJOUTER UN FILTRE POUR LES STATUQ
+
+
+import { UserAdsTraveler } from "./UserAdsTraveler";
+import { Sorting } from "@/components/logic/Sorting";
+import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { Pagination } from "@/components/logic/Pagination";
+import { PaginationUI } from "@/components/common/paginationUi/PaginationUI";
+import { Ads } from "@/store/store";
+
+export const HandlerUserAdsTraveler = ({
+  loadedDatas,
+  dataType,
+}: {
+  loadedDatas: Ads[];
+  dataType: string;
+}) => {
+  const [sortedDatas, setSortedDatas] = useState<Ads[]>(loadedDatas);
+  const [paginatedData, setPaginatedData] = useState<Ads[]>(loadedDatas);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPage] = useState(1);
+  const [endIndex, setEndIndex] = useState(1);
+
+  const handleCurrentPage = (value: number) => {
+    setPage(value);
+  };
+
+  const handleEndIndex = (value: number) => {
+    setEndIndex(value);
+  };
+
+  return (
+    <div>
+      {loadedDatas && (
+        <>
+          <div className="flex justify-center mt-10 mb-10">
+            <Sorting
+              filtersToExclude={[
+                "validation",
+                "date-recherchee",
+                "ville-arrivee-croissant",
+                "ville-arrivee-decroissant",
+                "ville-depart-croissant",
+                "ville-depart-decroissant"
+              ]}
+              data={loadedDatas}
+              setSortedData={setSortedDatas}
+            />
+            <Pagination
+              page={page}
+              setTotalPage={setTotalPage}
+              sortedData={sortedDatas}
+              setPaginatedData={setPaginatedData}
+              handleEndIndex={handleEndIndex}
+            />
+          </div>
+          <div>
+            <Separator className="flex mt-5 w-[90%] rounded-lg mx-auto h-[1px] dark:bg-slate-600 bg-slate-200" />
+          </div>
+          <h1 className="text-2xl ml-20 mt-5 font-bold">{dataType}</h1>
+          <div className="flex gap-x-2 gap-y-5 flex-wrap justify-center">
+            {paginatedData?.map((loadedData: Ads, index: number) => (
+              <UserAdsTraveler loadedDatas={loadedData} key={index} />
+            ))}
+          </div>
+          <PaginationUI
+            endIndex={endIndex}
+            dataLength={sortedDatas?.length}
+            currentPage={handleCurrentPage}
+            totalPages={totalPages}
+          />
+        </>
+      )}
+    </div>
+  );
+};

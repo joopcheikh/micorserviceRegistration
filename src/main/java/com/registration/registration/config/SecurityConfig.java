@@ -3,7 +3,6 @@ package com.registration.registration.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -15,10 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.registration.registration.auditing.ApplicationAuditAware;
 import com.registration.registration.filter.JwtAuthenticationFilter;
 import com.registration.registration.service.UserDetailsServiceImp;
 
@@ -41,10 +40,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuditorAware<Integer> auditorAware() {
-        return new ApplicationAuditAware();
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+  
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity

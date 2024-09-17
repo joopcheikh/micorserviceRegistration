@@ -3,13 +3,17 @@ package com.registration.registration.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.registration.registration.DTO.LoginRequest;
 import com.registration.registration.emailrest.EmailService;
 import com.registration.registration.model.Role;
 import com.registration.registration.model.User;
 import com.registration.registration.repository.UserRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AuthenticationService {
@@ -18,7 +22,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
-
+    @Autowired
+    private LoggingHistoryService loggingHistoryService; 
     @Autowired
     private EmailService emailService;
 
@@ -62,57 +67,28 @@ public class AuthenticationService {
         return new AuthenticationResponse(token, savedUser.getRole().name());
     }
 
-    public AuthenticationResponse login(User authUser) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        authUser.getEmail(),
-                        authUser.getPassword()
-                )
-        );
+  public AuthenticationResponse login(LoginRequest authUser) {
+        try {
+            // Tente l'authentification
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            authUser.getEmail(),
+                            authUser.getPassword()
+                    )
+            );
 
-        User user = userRepository.findUserByEmail(authUser.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String token = jwtService.generateToken(user);
+            User user = userRepository.findUserByEmail(authUser.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String token = jwtService.generateToken(user);
 
-        return new AuthenticationResponse(token, user.getRole().name());
+            return new AuthenticationResponse(token, user.getRole().name());
+
+        } catch (AuthenticationException e) {
+            loggingHistoryService.logFailedAttempt(authUser.getIp(),authUser.getEmail());
+
+            throw new RuntimeException("Authentication failed: Invalid email or password");
+        }
     }
 
-    // Methode pour les candidatures
-    /*public String candidature(String username, String firstname, String telephone, String sexe, String address, Date birthdate, String birthplace, String cnicardnumber, String filePath, String concours) throws IOException {
-        // Vérifiez que le fichier est un PDF
-        Path file = Paths.get(filePath);
-        if (!Files.exists(file)) {
-            throw new IllegalArgumentException("Le fichier doit être un PDF.");
-        }
-        System.out.println("i m here");
-        // Vérifiez si l'utilisateur existe déjà
-        //Optional<Candidature> existingCandidat = candidatureRepository.findCandidatureByUsername(username);
-        Optional<Candidature> existingCandidat = candidatureRepository.findCandidatureByUsername(username);
-        if (existingCandidat.isPresent()) {
-            throw new IllegalArgumentException("Un utilisateur avec ce nom d'utilisateur existe déjà.");
-        }
-        System.out.println("next to the problem");
-        // Enregistrez les informations de l'utilisateur
-        Candidature candidat = new Candidature();
-        candidat.setUsername(username);
-        candidat.setFirstname(firstname);
-        candidat.setTelephone(telephone);
-        candidat.setSexe(sexe);
-        candidat.setAdress(address);
-        candidat.setBirthdate(birthdate);
-        candidat.setBirthplace(birthplace);
-        candidat.setCnicardnumber(cnicardnumber);
-        candidat.setFilePath(filePath); // Stocker le chemin du fichier
-        candidat.setConcours(concours);
-        // user.setRole("ROLE_CANDIDATE"); // Décommentez si nécessaire
-        // user.setPassword(""); // Définissez un mot de passe si nécessaire
-        System.out.println("nexproblem");
-        try {
-            candidatureRepository.save(candidat);
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'enregistrement de l'utilisateur.", e);
-        }
 
-        return "Candidature reçue avec succès.";
-    }*/
 }

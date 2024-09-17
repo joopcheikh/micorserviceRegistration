@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.registration.registration.DTO.LoginRequest;
 import com.registration.registration.model.User;
 import com.registration.registration.service.AuthenticationResponse;
 import com.registration.registration.service.AuthenticationService;
@@ -31,8 +32,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody User user) {
-        return ResponseEntity.ok(authenticationService.login(user));
+    public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authenticationService.login(loginRequest));
     }
 
 
