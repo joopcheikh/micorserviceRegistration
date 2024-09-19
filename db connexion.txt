@@ -12,80 +12,69 @@ SET role = 'ADMIN'
 WHERE id = 1;
 
 
-AJOUTER UN FILTRE POUR LES STATUQ
+import co.com.retrival.security.filters.JwtFilter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.gateway.config.GlobalCorsProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import javax.annotation.PostConstruct;
 
-import { UserAdsTraveler } from "./UserAdsTraveler";
-import { Sorting } from "@/components/logic/Sorting";
-import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { Pagination } from "@/components/logic/Pagination";
-import { PaginationUI } from "@/components/common/paginationUi/PaginationUI";
-import { Ads } from "@/store/store";
+@Configuration
+@EnableWebFluxSecurity
+@Slf4j
+@EnableConfigurationProperties(value = {GlobalCorsProperties.class})
+public class ApiGatewaySecurityAutoConfiguration {
 
-export const HandlerUserAdsTraveler = ({
-  loadedDatas,
-  dataType,
-}: {
-  loadedDatas: Ads[];
-  dataType: string;
-}) => {
-  const [sortedDatas, setSortedDatas] = useState<Ads[]>(loadedDatas);
-  const [paginatedData, setPaginatedData] = useState<Ads[]>(loadedDatas);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPage] = useState(1);
-  const [endIndex, setEndIndex] = useState(1);
+    @Bean
+    public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http,
+                                                       @Value("${jwt.secret}") String secret) {
+        log.info("Configuring SecurityWebFilterChain");
+        return http.securityMatcher(new NegatedServerWebExchangeMatcher(
+                ServerWebExchangeMatchers.pathMatchers(
+                        "/excluded/paths/**")))
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .logout(logout -> logout
+                        .requiresLogout(new PathPatternParserServerWebExchangeMatcher("**/logout")))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .addFilterAt(JwtFilter.of(secret), SecurityWebFiltersOrder.AUTHORIZATION)
+                .cors()
+                .and()
+                .build();
+    }
 
-  const handleCurrentPage = (value: number) => {
-    setPage(value);
-  };
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @RefreshScope
+    public CorsWebFilter corsWebFilter(CorsConfigurationSource corsConfigurationSource) {
+        return new CorsWebFilter(corsConfigurationSource);
+    }
 
-  const handleEndIndex = (value: number) => {
-    setEndIndex(value);
-  };
+    @Bean 
+    public CorsConfigurationSource corsConfigurationSource(GlobalCorsProperties globalCorsProperties) {
+        var source = new UrlBasedCorsConfigurationSource();
+        globalCorsProperties.getCorsConfigurations().forEach(source::registerCorsConfiguration);
+        return source;
+    }
 
-  return (
-    <div>
-      {loadedDatas && (
-        <>
-          <div className="flex justify-center mt-10 mb-10">
-            <Sorting
-              filtersToExclude={[
-                "validation",
-                "date-recherchee",
-                "ville-arrivee-croissant",
-                "ville-arrivee-decroissant",
-                "ville-depart-croissant",
-                "ville-depart-decroissant"
-              ]}
-              data={loadedDatas}
-              setSortedData={setSortedDatas}
-            />
-            <Pagination
-              page={page}
-              setTotalPage={setTotalPage}
-              sortedData={sortedDatas}
-              setPaginatedData={setPaginatedData}
-              handleEndIndex={handleEndIndex}
-            />
-          </div>
-          <div>
-            <Separator className="flex mt-5 w-[90%] rounded-lg mx-auto h-[1px] dark:bg-slate-600 bg-slate-200" />
-          </div>
-          <h1 className="text-2xl ml-20 mt-5 font-bold">{dataType}</h1>
-          <div className="flex gap-x-2 gap-y-5 flex-wrap justify-center">
-            {paginatedData?.map((loadedData: Ads, index: number) => (
-              <UserAdsTraveler loadedDatas={loadedData} key={index} />
-            ))}
-          </div>
-          <PaginationUI
-            endIndex={endIndex}
-            dataLength={sortedDatas?.length}
-            currentPage={handleCurrentPage}
-            totalPages={totalPages}
-          />
-        </>
-      )}
-    </div>
-  );
-};
+    @PostConstruct
+    public void postConstruct() {
+        log.info("Starting ApiGatewaySecurityAutoConfiguration");
+    }
+}
