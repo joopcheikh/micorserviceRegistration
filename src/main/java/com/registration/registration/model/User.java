@@ -35,9 +35,11 @@ public class User implements UserDetails {
 
     private String lastname;
 
+    private Boolean have_postuled = false;
+
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
-    private TypeCandidat typeCandidat;
+    private TypeCandidat type_candidat;
 
     @Column(unique = true)
     private String email;
