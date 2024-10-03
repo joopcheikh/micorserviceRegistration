@@ -24,7 +24,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     @Autowired
     private LoggingHistoryService loggingHistoryService; 
-    @Autowired
+    //@Autowired
     private EmailService emailService;
 
     @Autowired
@@ -32,12 +32,15 @@ public class AuthenticationService {
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
-            AuthenticationManager authenticationManager) {
+            AuthenticationManager authenticationManager,
+            EmailService emailService) {
+
 
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
+        this.emailService = emailService;
 
     }
 
@@ -92,3 +95,6 @@ public class AuthenticationService {
 
 
 }
+
+
+

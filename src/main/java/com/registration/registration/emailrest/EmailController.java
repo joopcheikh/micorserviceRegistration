@@ -9,6 +9,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * @author sosthene
+ * Contrôleur REST pour gérer les opérations liées aux emails et à la réinitialisation des mots de passe.
+ *
+ * Ce contrôleur expose des endpoints pour envoyer des emails avec des codes de validation,
+ * valider ces codes, et changer le mot de passe d'un utilisateur.
+ * Il utilise le service EmailService pour la logique métier associée.
+ */
 @RestController
 @RequestMapping("/email")
 public class EmailController {
@@ -22,23 +30,29 @@ public class EmailController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Envoie un email contenant un code de validation à l'adresse spécifiée.
+     *
+     * @param emailRequest Contient l'adresse email, le sujet et le corps de l'email.
+     * @return Réponse indiquant si l'email a été envoyé avec succès ou si l'email existe déjà.
+     */
     @PostMapping("/send")
     public ResponseEntity<Object> sendEmail(@RequestBody EmailRequest emailRequest) {
         if (emailService.emailExists(emailRequest.getTo())) {
             String validationCode = emailService.generateValidationCode();
             emailService.storeValidationCode(emailRequest.getTo(), validationCode);
-    
+
             String bodyWithCode = emailRequest.getBody() + "\nYour validation code is: " + validationCode;
             emailService.sendEmail(emailRequest.getTo(), emailRequest.getSubject(), bodyWithCode);
-    
-            // Return JSON response
+
+            // Retourner une réponse JSON
             return ResponseEntity.ok().body(new ApiResponse("success", "Email sent successfully!"));
         }
-        // Return JSON response for existing email
+        // Retourner une réponse JSON pour un email existant
         return ResponseEntity.badRequest().body(new ApiResponse("error", "Email already exists!"));
     }
 
-    // Create a simple class for API responses
+    // Classe interne pour les réponses API
     public static class ApiResponse {
         private String status;
         private String message;
@@ -81,10 +95,16 @@ public class EmailController {
         }
     }
 
+    /**
+     * Valide le code de validation fourni et génère un token si le code est valide.
+     *
+     * @param validationRequest Contient l'adresse email et le code de validation.
+     * @return Un token si le code est valide, sinon un statut BAD_REQUEST.
+     */
     @PostMapping("/validate")
     public ResponseEntity<TokenResponse> validateCode(@RequestBody ValidationRequest validationRequest) {
         boolean isValid = emailService.validateCode(validationRequest.getEmail(), validationRequest.getCode());
-        
+
         if (isValid) {
             String token = emailService.generateToken(validationRequest.getEmail());
             TokenResponse response = new TokenResponse(token);
@@ -94,6 +114,12 @@ public class EmailController {
         }
     }
 
+    /**
+     * Change le mot de passe de l'utilisateur après validation du token.
+     *
+     * @param request Contient l'adresse email, le token et le nouveau mot de passe.
+     * @return Une réponse indiquant si le mot de passe a été changé avec succès ou non.
+     */
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse> changePassword(@RequestBody ChangePasswordRequest request) {
         boolean isValidToken = emailService.validateToken(request.getEmail(), request.getToken());
@@ -101,11 +127,11 @@ public class EmailController {
             String encryptedPassword = passwordEncoder.encode(request.getPassword());
             userRepository.updatePassword(request.getEmail(), encryptedPassword);
             emailService.removeToken(request.getEmail());
-    
-            ApiResponse response = new ApiResponse("success", "success");
+
+            ApiResponse response = new ApiResponse("success", "Password changed successfully.");
             return ResponseEntity.ok(response);
         } else {
-            ApiResponse response = new ApiResponse("error", "error");
+            ApiResponse response = new ApiResponse("error", "Invalid token or email.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
