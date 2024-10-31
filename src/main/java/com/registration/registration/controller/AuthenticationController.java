@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.registration.registration.DTO.LoginRequest;
+import com.registration.registration.emailrest.EmailService;
 import com.registration.registration.model.User;
 import com.registration.registration.service.AuthenticationResponse;
 import com.registration.registration.service.AuthenticationService;
@@ -21,9 +22,14 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Autowired
+    private EmailService emailService;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
+            emailService.sendEmail(user.getEmail(), "CONFIRMATION CREATION DU COMPTE", 
+            "Bonjour, " + user.getLastname() + ", votre compte a bien a bien été crée. Vous pouvez maintenant passer votre candidature.");
             return ResponseEntity.ok(authenticationService.register(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("duplicate"));

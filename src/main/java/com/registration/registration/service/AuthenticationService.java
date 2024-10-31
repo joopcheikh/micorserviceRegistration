@@ -50,18 +50,18 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(userRigistry.getPassword()));
         user.setRole(Role.USER);
 
-        String emailBody = String.format(
+        /*String emailBody = String.format(
         "Bonjour %s,\n\n" +
         "Votre compte sur Armée SN a été créé avec succès. Vous pouvez maintenant passer votre candidature.\n\n" +
         "Merci !",
         user.getFirstname()
-        );
+        );*/
 
       
         // Return JSON response
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
-        emailService.sendEmail(user.getEmail(), "Alerte creation de compte gatsmapping", emailBody);
+        //emailService.sendEmail(user.getEmail(), "Alerte creation de compte gatsmapping", emailBody);
      
 
         return new AuthenticationResponse(token, savedUser.getRole().name());
