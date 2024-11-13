@@ -91,4 +91,25 @@ public class JwtService {
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
+    public String generateRefreshToken(User user) {
+        return Jwts.builder()
+                .subject(user.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
+                .signWith(getSiningKey())
+                .compact();
+    }
+
+    public String refreshToken(String refreshToken, User user) {
+        if (isTokenValid(refreshToken, user)) {
+            return generateToken(user);
+        }
+        throw new RuntimeException("Refresh token is invalid or expired");
+    }
+
+    public Boolean isRefreshTokenValid(String refreshToken, User user) {
+        String username = extractUsername(refreshToken);
+        return (username.equals(user.getUsername()) && !isTokenExpired(refreshToken));
+    }
 }

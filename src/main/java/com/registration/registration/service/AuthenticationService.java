@@ -23,7 +23,7 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     @Autowired
-    private LoggingHistoryService loggingHistoryService; 
+    private LoggingHistoryService loggingHistoryService;
     @Autowired
     private EmailService emailService;
 
@@ -50,45 +50,59 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(userRigistry.getPassword()));
         user.setRole(Role.USER);
 
-        /*String emailBody = String.format(
-        "Bonjour %s,\n\n" +
-        "Votre compte sur Armée SN a été créé avec succès. Vous pouvez maintenant passer votre candidature.\n\n" +
-        "Merci !",
-        user.getFirstname()
-        );*/
+        /*
+         * String emailBody = String.format(
+         * "Bonjour %s,\n\n" +
+         * "Votre compte sur Armée SN a été créé avec succès. Vous pouvez maintenant passer votre candidature.\n\n"
+         * +
+         * "Merci !",
+         * user.getFirstname()
+         * );
+         */
 
-      
         // Return JSON response
         User savedUser = userRepository.save(user);
-        String token = jwtService.generateToken(savedUser);
-        //emailService.sendEmail(user.getEmail(), "Alerte creation de compte gatsmapping", emailBody);
-     
 
-        return new AuthenticationResponse(token, savedUser.getRole().name());
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+        return new AuthenticationResponse(accessToken, refreshToken, savedUser.getRole().name());
+
     }
 
-  public AuthenticationResponse login(LoginRequest authUser) {
+    public AuthenticationResponse refreshToken(String refreshToken) {
+        String email = jwtService.extractUsername(refreshToken);
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (jwtService.isRefreshTokenValid(refreshToken, user)) {
+            String accessToken = jwtService.generateToken(user);
+            String newRefreshToken = jwtService.generateRefreshToken(user);
+            return new AuthenticationResponse(accessToken, newRefreshToken,
+                    user.getRole().name());
+        }
+
+        throw new RuntimeException("Refresh token is invalid or expired");}
+
+    public AuthenticationResponse login(LoginRequest authUser) {
         try {
-            // Tente l'authentification
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authUser.getEmail(),
-                            authUser.getPassword()
-                    )
-            );
+                            authUser.getPassword()));
 
             User user = userRepository.findUserByEmail(authUser.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            String token = jwtService.generateToken(user);
 
-            return new AuthenticationResponse(token, user.getRole().name());
+            String accessToken = jwtService.generateToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user);
+
+            return new AuthenticationResponse(accessToken, refreshToken, user.getRole().name());
 
         } catch (AuthenticationException e) {
-            loggingHistoryService.logFailedAttempt(authUser.getIp(),authUser.getEmail());
+            loggingHistoryService.logFailedAttempt(authUser.getIp(), authUser.getEmail());
 
             throw new RuntimeException("Authentication failed: Invalid email or password");
         }
     }
-
 
 }
